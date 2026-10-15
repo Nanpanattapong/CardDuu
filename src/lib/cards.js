@@ -51,9 +51,9 @@ export const loadFbMeta = (() => {
 
 export const THB_PER_USD = 35;
 const META = {
-  yugioh: { pre: 'ygo-', load: loadYgoMeta, set: (m) => m[2], type: (m) => m[1], usd: (m) => m[5] },
-  onepiece: { pre: 'op-', load: loadOpMeta, set: (m) => m[1], type: (m) => [m[2], m[4]].filter(Boolean).join(' · '), usd: (m) => m[7] },
-  football: { pre: 'fb-', load: loadFbMeta, set: (m) => m[2], type: (m) => m[0], usd: (m) => null },
+  yugioh: { pre: 'ygo-', load: loadYgoMeta, set: (m) => m[2], type: (m) => m[1], rarity: (m) => m[4], usd: (m) => m[5] },
+  onepiece: { pre: 'op-', load: loadOpMeta, set: (m) => m[1], type: (m) => [m[2], m[4]].filter(Boolean).join(' · '), rarity: (m) => m[3], usd: (m) => m[7] },
+  football: { pre: 'fb-', load: loadFbMeta, set: (m) => m[2], type: (m) => m[0], rarity: (m) => m[1], usd: (m) => null },
 };
 export const gameOf = (code) => code?.startsWith('ygo-') ? 'yugioh' : code?.startsWith('op-') ? 'onepiece' : code?.startsWith('fb-') ? 'football' : 'pokemon';
 
@@ -61,16 +61,16 @@ export const gameOf = (code) => code?.startsWith('ygo-') ? 'yugioh' : code?.star
 export const loadGameDb = (() => {
   const cache = {};
   return (game) => (cache[game] ??= META[game].load().then((meta) => {
-    const g = META[game], db = { index: {}, setOf: {}, typeOf: {}, priceOf: {}, nameOf: {} };
+    const g = META[game], db = { index: {}, setOf: {}, typeOf: {}, rarityOf: {}, priceOf: {}, nameOf: {} };
     for (const [id, m] of Object.entries(meta)) {
       const c = g.pre + id;
       (db.index[m[0]] ??= []).push(c);
       db.nameOf[c] = m[0];
-      db.setOf[c] = g.set(m); db.typeOf[c] = g.type(m);
+      db.setOf[c] = g.set(m); db.typeOf[c] = g.type(m); db.rarityOf[c] = g.rarity(m);
       if (g.usd(m)) db.priceOf[c] = Math.round(g.usd(m) * THB_PER_USD);
     }
     const uniq = (o) => [...new Set(Object.values(o).filter(Boolean))].sort();
-    return { ...db, sets: uniq(db.setOf), typeList: uniq(db.typeOf) };
+    return { ...db, sets: uniq(db.setOf), typeList: uniq(db.typeOf), rarityList: uniq(db.rarityOf) };
   }));
 })();
 

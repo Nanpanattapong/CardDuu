@@ -24,17 +24,20 @@ export default function Datacard() {
   const [priceDb, setPriceDb] = useState({});
   const [types, setTypes] = useState({});
   const [typeSel, setTypeSel] = useState(params.get('type') || 'all');
+  const [raritySel, setRaritySel] = useState(params.get('rarity') || 'all');
   const [sort, setSort] = useState(params.get('sort') || 'name');
   const picking = params.get('name');
   const game = GAMES.some(([k]) => k === params.get('game')) ? params.get('game') : 'pokemon';
   const [setOf, setSetOf] = useState(null); // null = โปเกมอน: ชุด = prefix ของ code
+  const [rarityOf, setRarityOf] = useState(null);
   const [typeList, setTypeList] = useState(TYPES);
+  const [rarityList, setRarityList] = useState([]);
 
   useEffect(() => {
     let live = true;
     setIndex({}); setSelected(null);
     if (game === 'pokemon') {
-      setSetOf(null); setTypeList(TYPES);
+      setSetOf(null); setRarityOf(null); setTypeList(TYPES); setRarityList([]); setRaritySel('all');
       fetch('/data/card-index.json').then((r) => r.json()).then((d) => live && setIndex(d)).catch(() => {});
       fetch('/data/card-types.json').then((r) => r.json()).then((d) => live && setTypes(d)).catch(() => {});
       fetch('/data/sets.json').then((r) => r.json()).then((d) => live && setSets(d)).catch(() => {});
@@ -43,8 +46,8 @@ export default function Datacard() {
       // ยูกิ/วันพีซ: แปลง meta เป็นรูปแบบเดียวกับโปเกมอน (src/lib/cards.js loadGameDb)
       loadGameDb(game).then((d) => {
         if (!live) return;
-        setIndex(d.index); setTypes(d.typeOf); setPriceDb(d.priceOf); setSetOf(d.setOf);
-        setSets(d.sets.map((s) => ({ id: s, name: s }))); setTypeList(d.typeList.map((t) => [t, t]));
+        setIndex(d.index); setTypes(d.typeOf); setPriceDb(d.priceOf); setSetOf(d.setOf); setRarityOf(d.rarityOf);
+        setSets(d.sets.map((s) => ({ id: s, name: s }))); setTypeList(d.typeList.map((t) => [t, t])); setRarityList(d.rarityList);
       });
     }
     return () => { live = false; };
@@ -65,7 +68,7 @@ export default function Datacard() {
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     const rows = names.flatMap((n) => {
-      const codes = index[n].filter((c) => (setSel === 'all' || setKey(c) === setSel) && (typeSel === 'all' || types[c] === typeSel));
+      const codes = index[n].filter((c) => (setSel === 'all' || setKey(c) === setSel) && (typeSel === 'all' || types[c] === typeSel) && (raritySel === 'all' || rarityOf?.[c] === raritySel));
       if (!codes.length) return [];
       if (s && !n.toLowerCase().includes(s) && !codes.some((c) => c.toLowerCase().includes(s))) return [];
       return [{ name: n, codes, top: Math.max(0, ...codes.map(priceOf)) }];
@@ -73,7 +76,7 @@ export default function Datacard() {
     if (sort === 'desc') rows.sort((a, b) => b.top - a.top);
     if (sort === 'asc') rows.sort((a, b) => (a.top || Infinity) - (b.top || Infinity)); // ไม่มีราคาไว้ท้าย
     return rows;
-  }, [names, index, q, setSel, typeSel, types, sort, priceDb, setOf]);
+  }, [names, index, q, setSel, typeSel, types, raritySel, rarityOf, sort, priceDb, setOf]);
 
   const open = (name, code) => { setSelected({ name, code }); setPrices(null); };
   useEffect(() => {
@@ -110,7 +113,7 @@ export default function Datacard() {
             <div className="btn-row" role="radiogroup" aria-label="ประเภทการ์ด" style={{ marginBottom: 12 }}>
               {GAMES.map(([k, label]) => (
                 <button key={k} role="radio" aria-checked={game === k} className={`btn btn-sm ${game === k ? 'btn-primary' : ''}`}
-                  onClick={() => { setSetSel('all'); setTypeSel('all'); setCount(PAGE); nav(`/datacard?game=${k}`); }}>{label}</button>
+                  onClick={() => { setSetSel('all'); setTypeSel('all'); setRaritySel('all'); setCount(PAGE); nav(`/datacard?game=${k}`); }}>{label}</button>
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -128,6 +131,12 @@ export default function Datacard() {
                   {typeList.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
                 </select>
               </div>
+              {rarityList.length > 0 && <div className="sel-wrap" style={{ flex: 1, minWidth: 120 }}>
+                <select value={raritySel} onChange={(e) => { setRaritySel(e.target.value); setCount(PAGE); }} aria-label="ความหายาก">
+                  <option value="all">ทุกความหายาก</option>
+                  {rarityList.map((rarity) => <option key={rarity} value={rarity}>{rarity}</option>)}
+                </select>
+              </div>}
               <div className="sel-wrap" style={{ flex: 1, minWidth: 140 }}>
                 <select value={sort} onChange={(e) => { setSort(e.target.value); setCount(PAGE); }} aria-label="เรียง">
                   <option value="name">เรียงตามชื่อ A–Z</option>

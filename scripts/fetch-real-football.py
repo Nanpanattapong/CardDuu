@@ -7,116 +7,21 @@ DATA_FILE = pathlib.Path('D:/carddex/public/data/football-meta.json')
 OUT_IMG.mkdir(parents=True, exist_ok=True)
 
 PLAYERS = [
-    {
-        "code": "messi-10",
-        "wiki": "Lionel_Messi",
-        "name": "Lionel Messi",
-        "rarity": "Legend",
-        "club": "Inter Miami CF",
-        "season": "2024-25",
-        "number": "10",
-        "theme": (230, 240, 255),
-        "border": (30, 100, 200)
-    },
-    {
-        "code": "ronaldo-7",
-        "wiki": "Cristiano_Ronaldo",
-        "name": "Cristiano Ronaldo",
-        "rarity": "Legend",
-        "club": "Al Nassr",
-        "season": "2024-25",
-        "number": "7",
-        "theme": (255, 240, 220),
-        "border": (220, 160, 20)
-    },
-    {
-        "code": "haaland-9",
-        "wiki": "Erling_Haaland",
-        "name": "Erling Haaland",
-        "rarity": "Rare",
-        "club": "Manchester City",
-        "season": "2024-25",
-        "number": "9",
-        "theme": (220, 245, 255),
-        "border": (80, 160, 230)
-    },
-    {
-        "code": "mbappe-9",
-        "wiki": "Kylian_Mbappé",
-        "name": "Kylian Mbappé",
-        "rarity": "Rare",
-        "club": "Real Madrid",
-        "season": "2024-25",
-        "number": "9",
-        "theme": (250, 250, 250),
-        "border": (70, 70, 100)
-    },
-    {
-        "code": "bellingham-5",
-        "wiki": "Jude_Bellingham",
-        "name": "Jude Bellingham",
-        "rarity": "Rare",
-        "club": "Real Madrid",
-        "season": "2024-25",
-        "number": "5",
-        "theme": (245, 245, 255),
-        "border": (90, 80, 140)
-    },
-    {
-        "code": "de-bruyne-10",
-        "wiki": "Kevin_De_Bruyne",
-        "name": "Kevin De Bruyne",
-        "rarity": "Rare",
-        "club": "Manchester City",
-        "season": "2024-25",
-        "number": "17",
-        "theme": (220, 245, 255),
-        "border": (80, 160, 230)
-    },
-    {
-        "code": "griezmann-7",
-        "wiki": "Antoine_Griezmann",
-        "name": "Antoine Griezmann",
-        "rarity": "Common",
-        "club": "Atlético_Madrid",
-        "season": "2024-25",
-        "number": "7",
-        "theme": (255, 230, 230),
-        "border": (200, 40, 40)
-    },
-    {
-        "code": "pedri-8",
-        "wiki": "Pedri",
-        "name": "Pedri",
-        "rarity": "Common",
-        "club": "FC Barcelona",
-        "season": "2024-25",
-        "number": "8",
-        "theme": (230, 230, 255),
-        "border": (150, 20, 50)
-    },
-    {
-        "code": "salah-11",
-        "wiki": "Mohamed_Salah",
-        "name": "Mohamed Salah",
-        "rarity": "Rare",
-        "club": "Liverpool",
-        "season": "2024-25",
-        "number": "11",
-        "theme": (255, 230, 230),
-        "border": (200, 30, 30)
-    },
-    {
-        "code": "vene-23",
-        "wiki": "Vinícius_Júnior",
-        "name": "Vinícius Júnior",
-        "rarity": "Rare",
-        "club": "Real Madrid",
-        "season": "2024-25",
-        "number": "7",
-        "theme": (250, 250, 250),
-        "border": (70, 70, 100)
-    }
+    {"code": "messi-10", "wiki": "Lionel_Messi", "name": "Lionel Messi", "rarity": "Legend", "club": "Inter Miami CF", "season": "2024-25", "number": "10", "theme": (230, 240, 255), "border": (30, 100, 200)},
+    {"code": "ronaldo-7", "wiki": "Cristiano_Ronaldo", "name": "Cristiano Ronaldo", "rarity": "Legend", "club": "Al Nassr", "season": "2024-25", "number": "7", "theme": (255, 240, 220), "border": (220, 160, 20)},
+    {"code": "haaland-9", "wiki": "Erling_Haaland", "name": "Erling Haaland", "rarity": "Rare", "club": "Manchester City", "season": "2024-25", "number": "9", "theme": (220, 245, 255), "border": (80, 160, 230)},
+    {"code": "mbappe-9", "wiki": "Kylian_Mbappé", "name": "Kylian Mbappé", "rarity": "Rare", "club": "Real Madrid", "season": "2024-25", "number": "9", "theme": (250, 250, 250), "border": (70, 70, 100)},
+    {"code": "bellingham-5", "wiki": "Jude_Bellingham", "name": "Jude Bellingham", "rarity": "Rare", "club": "Real Madrid", "season": "2024-25", "number": "5", "theme": (245, 245, 255), "border": (90, 80, 140)},
+    {"code": "de-bruyne-10", "wiki": "Kevin_De_Bruyne", "name": "Kevin De Bruyne", "rarity": "Rare", "club": "Manchester City", "season": "2024-25", "number": "17", "theme": (220, 245, 255), "border": (80, 160, 230)},
+    {"code": "griezmann-7", "wiki": "Antoine_Griezmann", "name": "Antoine Griezmann", "rarity": "Common", "club": "Atlético_Madrid", "season": "2024-25", "number": "7", "theme": (255, 230, 230), "border": (200, 40, 40)},
+    {"code": "pedri-8", "wiki": "Pedri", "name": "Pedri", "rarity": "Common", "club": "FC Barcelona", "season": "2024-25", "number": "8", "theme": (230, 230, 255), "border": (150, 20, 50)},
+    {"code": "salah-11", "wiki": "Mohamed_Salah", "name": "Mohamed Salah", "rarity": "Rare", "club": "Liverpool", "season": "2024-25", "number": "11", "theme": (255, 230, 230), "border": (200, 30, 30)},
+    {"code": "vene-23", "wiki": "Vinícius_Júnior", "name": "Vinícius Júnior", "rarity": "Rare", "club": "Real Madrid", "season": "2024-25", "number": "7", "theme": (250, 250, 250), "border": (70, 70, 100)},
+    {"code": "yamal-19", "wiki": "Lamine_Yamal", "name": "Lamine Yamal", "rarity": "Rare", "club": "FC Barcelona", "season": "2024-25", "number": "19", "theme": (230, 230, 255), "border": (150, 20, 50)},
+    {"code": "kane-9", "wiki": "Harry_Kane", "name": "Harry Kane", "rarity": "Rare", "club": "Bayern Munich", "season": "2024-25", "number": "9", "theme": (255, 255, 255), "border": (200, 20, 20)},
+    {"code": "neymar-10", "wiki": "Neymar", "name": "Neymar Jr", "rarity": "Legend", "club": "Al Hilal", "season": "2024-25", "number": "10", "theme": (255, 255, 200), "border": (20, 100, 20)},
+    {"code": "modric-10", "wiki": "Luka_Modrić", "name": "Luka Modrić", "rarity": "Legend", "club": "Real Madrid", "season": "2024-25", "number": "10", "theme": (250, 250, 250), "border": (70, 70, 100)},
+    {"code": "lewandowski-9", "wiki": "Robert_Lewandowski", "name": "Robert Lewandowski", "rarity": "Rare", "club": "FC Barcelona", "season": "2024-25", "number": "9", "theme": (230, 230, 255), "border": (150, 20, 50)},
 ]
 
 def fetch_wiki_image(title):
