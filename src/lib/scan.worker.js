@@ -21,6 +21,7 @@ self.onmessage = async (e) => {
   try {
     if (type === 'embed') {
       // DINOv2 export ใช้ batch=1 จึงรันทีละ crop เพื่อคง compatibility ของโมเดล
+      const ort = await import('onnxruntime-web/wasm');
       const s = await ortSess('/models/card-embed.onnx');
       data = [];
       for (const px of crops) {
