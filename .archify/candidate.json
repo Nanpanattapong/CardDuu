@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CardDex Architecture",
+    "output": ".archify/carddex-arch.html",
+    "quality_profile": "showcase"
+  },
+  "layout": {
+    "mode": "grid",
+    "cols": 8,
+    "cellW": 160
+  },
+  "components": [
+    { "id": "client", "type": "frontend", "label": "Frontend (React)", "tag": "Cloudflare Pages", "row": 1, "col": 0 },
+    { "id": "api", "type": "backend", "label": "Hono API", "tag": "Cloudflare Workers", "row": 1, "col": 3 },
+    { "id": "d1", "type": "database", "label": "D1 Database", "tag": "SQL", "row": 3, "col": 3 },
+    { "id": "data", "type": "database", "label": "Static Datasets", "tag": "JSON / Bin", "row": 3, "col": 0 },
+    { "id": "ext-pokemon", "type": "external", "label": "Pokémon TCG API", "tag": "REST", "row": 0, "col": 6 },
+    { "id": "ext-tcgdex", "type": "external", "label": "TCGdex API", "tag": "REST", "row": 1, "col": 6 },
+    { "id": "ext-google", "type": "external", "label": "Google OAuth", "tag": "Auth", "row": 2, "col": 6 }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Client Browser",
+      "wraps": ["client", "data"]
+    },
+    {
+      "kind": "region",
+      "label": "Cloudflare Infrastructure",
+      "wraps": ["api", "d1"]
+    }
+  ],
+  "connections": [
+    { "id": "c1", "from": "client", "to": "api", "label": "HTTPS REST" },
+    { "id": "c2", "from": "api", "to": "d1", "label": "SQL queries" },
+    { "id": "c3", "from": "client", "to": "data", "label": "Fetch models/embeddings" },
+    { "id": "c4", "from": "api", "to": "ext-pokemon", "label": "Fetch prices & info" },
+    { "id": "c5", "from": "api", "to": "ext-tcgdex", "label": "JA number lookup" },
+    { "id": "c6", "from": "api", "to": "ext-google", "label": "Token validation" }
+  ]
+}

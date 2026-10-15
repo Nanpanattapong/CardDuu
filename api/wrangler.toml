@@ -1,0 +1,21 @@
+name = "carddex-api"
+main = "index.js"
+compatibility_date = "2025-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "carddex-db"
+database_id = "ae00965d-96ed-4b71-b72b-5c4e44cd6f6e"
+
+[vars]
+SESSION_TTL_DAYS = "30"
+EMB_BASE = "https://carddex-ddw.pages.dev"
+# "*.x.pages.dev" ครอบทุก preview URL ที่ Pages ออกให้ทุก deploy
+GOOGLE_CLIENT_ID = "216672545845-v3leht4u5aotrf31cuvhhg8sice6fo39.apps.googleusercontent.com"
+ALLOWED_ORIGINS ="https://carddex-ddw.pages.dev,*.carddex-ddw.pages.dev,http://localhost:5173,http://127.0.0.1:5173"
+
+# บันทึกราคาลง D1 (recordPrices ใน index.js) — 2 ครั้ง/ชม. หลบนาทีที่ 0 กับ 30
+[triggers]
+crons = ["13,43 * * * *"]
+
+# ความลับ ห้ามใส่ในไฟล์นี้:  npx wrangler secret put SESSION_SECRET

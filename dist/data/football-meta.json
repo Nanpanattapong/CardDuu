@@ -1,0 +1,62 @@
+{
+  "messi-10": [
+    "Lionel Messi",
+    "Legend",
+    "Inter Miami CF",
+    "2024-25"
+  ],
+  "ronaldo-7": [
+    "Cristiano Ronaldo",
+    "Legend",
+    "Al Nassr",
+    "2024-25"
+  ],
+  "haaland-9": [
+    "Erling Haaland",
+    "Rare",
+    "Manchester City",
+    "2024-25"
+  ],
+  "mbappe-9": [
+    "Kylian Mbappé",
+    "Rare",
+    "Real Madrid",
+    "2024-25"
+  ],
+  "bellingham-5": [
+    "Jude Bellingham",
+    "Rare",
+    "Real Madrid",
+    "2024-25"
+  ],
+  "de-bruyne-10": [
+    "Kevin De Bruyne",
+    "Rare",
+    "Manchester City",
+    "2024-25"
+  ],
+  "griezmann-7": [
+    "Antoine Griezmann",
+    "Common",
+    "Atlético_Madrid",
+    "2024-25"
+  ],
+  "pedri-8": [
+    "Pedri",
+    "Common",
+    "FC Barcelona",
+    "2024-25"
+  ],
+  "salah-11": [
+    "Mohamed Salah",
+    "Rare",
+    "Liverpool",
+    "2024-25"
+  ],
+  "vene-23": [
+    "Vinícius Júnior",
+    "Rare",
+    "Real Madrid",
+    "2024-25"
+  ]
+}

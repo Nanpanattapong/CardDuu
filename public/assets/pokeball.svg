@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="redTop" cx="35%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#ff8a8a"/>
+      <stop offset="25%" stop-color="#f04444"/>
+      <stop offset="60%" stop-color="#c81e1e"/>
+      <stop offset="100%" stop-color="#7f0d0d"/>
+    </radialGradient>
+    <radialGradient id="whiteBot" cx="35%" cy="25%" r="90%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#b6bdc9"/>
+    </radialGradient>
+    <radialGradient id="btnGrad" cx="35%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </radialGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a3f4b"/>
+      <stop offset="50%" stop-color="#0b0d12"/>
+      <stop offset="100%" stop-color="#2b303c"/>
+    </linearGradient>
+  </defs>
+  <!-- shadow -->
+  <ellipse cx="100" cy="182" rx="58" ry="12" fill="#000" opacity=".45"/>
+  <!-- bottom half -->
+  <path d="M12 100 A88 88 0 0 0 188 100 Z" fill="url(#whiteBot)"/>
+  <!-- top half -->
+  <path d="M12 100 A88 88 0 0 1 188 100 Z" fill="url(#redTop)"/>
+  <!-- gloss -->
+  <ellipse cx="66" cy="52" rx="30" ry="14" fill="#fff" opacity=".45" transform="rotate(-24 66 52)"/>
+  <ellipse cx="60" cy="48" rx="10" ry="5" fill="#fff" opacity=".8" transform="rotate(-24 60 48)"/>
+  <!-- band -->
+  <rect x="10" y="90" width="180" height="20" fill="url(#band)"/>
+  <!-- center button outer -->
+  <circle cx="100" cy="100" r="26" fill="#0b0d12"/>
+  <circle cx="100" cy="100" r="22" fill="#e8ecf3"/>
+  <circle cx="100" cy="100" r="17" fill="url(#btnGrad)" stroke="#0b0d12" stroke-width="2"/>
+  <circle cx="100" cy="100" r="7" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <circle cx="97" cy="97" r="2.4" fill="#fff"/>
+</svg>

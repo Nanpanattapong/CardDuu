@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "38354186-82c0-40af-a04a-ba8440664e5f",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\carddex\\.archify\\candidate.json",
+  "output": "D:\\carddex\\.archify\\carddex-arch.html",
+  "specification": {
+    "sha256": "9934b08056ade816cfdc5b9b156362b84707c3e8333e73d130af3c1b03e74afe",
+    "bytes": 1798
+  },
+  "artifact": {
+    "sha256": "649a0ce2d6a44952c1d28fc5553d9caa72d199450b3c5dff592f7a8688a9c348",
+    "bytes": 755545
+  }
+}

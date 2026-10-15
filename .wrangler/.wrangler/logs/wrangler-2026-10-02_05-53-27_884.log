@@ -1,0 +1,36 @@
+
+--- 2026-10-02T05:53:28.652Z debug
+🪵  Writing logs to "D:\carddex\.wrangler\.wrangler\logs\wrangler-2026-10-02_05-53-27_884.log"
+---
+
+--- 2026-10-02T05:53:28.651Z debug
+.env file not found at "C:\Windows\System32\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-02T05:53:28.655Z debug
+.env file not found at "C:\Windows\System32\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-02T05:53:28.769Z log
+
+ ⛅️ wrangler 4.131.1
+────────────────────
+---
+
+--- 2026-10-02T05:53:28.870Z log
+
+---
+
+--- 2026-10-02T05:53:29.018Z error
+X [ERROR] In a non-interactive environment, it's necessary to set a CLOUDFLARE_API_TOKEN environment variable for wrangler to work. Please go to https://developers.cloudflare.com/fundamentals/api/get-started/create-token/ for instructions on how to create an api token, and assign its value to CLOUDFLARE_API_TOKEN.
+
+
+---
+
+--- 2026-10-02T05:53:29.019Z debug
+Error: In a non-interactive environment, it's necessary to set a CLOUDFLARE_API_TOKEN environment variable for wrangler to work. Please go to https://developers.cloudflare.com/fundamentals/api/get-started/create-token/ for instructions on how to create an api token, and assign its value to CLOUDFLARE_API_TOKEN.
+    at Object.requireAuth (C:\Users\panat\AppData\Roaming\npm\node_modules\wrangler\wrangler-dist\cli.js:127739:15)
+    at async Object.handler (C:\Users\panat\AppData\Roaming\npm\node_modules\wrangler\wrangler-dist\cli.js:294321:27)
+    at async C:\Users\panat\AppData\Roaming\npm\node_modules\wrangler\wrangler-dist\cli.js:223831:26
+    at async Object.handler (C:\Users\panat\AppData\Roaming\npm\node_modules\wrangler\wrangler-dist\cli.js:223768:7)
+---
