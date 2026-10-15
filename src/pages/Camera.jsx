@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Nav from '../components/Nav.jsx';
 import PriceChart from '../components/PriceChart.jsx';
@@ -128,17 +128,54 @@ export default function Camera() {
   const [step, setStep] = useState('capture');
   const [checkOn, setCheckOn] = useState(0);
   const [toast, setToast] = useState('');
+  const [showLive, setShowLive] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
   const showToast = (m) => { setToast(m); setTimeout(() => setToast(''), 3000); };
 
   const ready = !!front;
   const nCards = { yugioh: '14,771', onepiece: '4,212' }[game] || '20,670';
+
+  useEffect(() => {
+    return () => { if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop()); };
+  }, []);
+
+  useEffect(() => {
+    if (showLive && videoRef.current && streamRef.current) videoRef.current.srcObject = streamRef.current;
+  }, [showLive]);
+
+  const openLive = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) return showToast('เบราว์เซอร์นี้ไม่รองรับกล้องสด');
+    try {
+      streamRef.current = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } });
+      setShowLive(true);
+    } catch (e) {
+      showToast('เปิดกล้องไม่ได้: ' + e.message);
+    }
+  };
+
+  const closeLive = () => {
+    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setShowLive(false);
+  };
+
+  const snap = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    const c = document.createElement('canvas');
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext('2d').drawImage(v, 0, 0);
+    setFront(c.toDataURL('image/jpeg', 0.85));
+    closeLive();
+  };
 
   const onPick = (side, file) => {
     if (!file) return;
     readImage(file, (data) => {
       if (!data) return showToast('อ่านภาพไม่สำเร็จ ลองใช้ภาพอื่น');
       if (side === 'front') setFront(data);
-    });
+    }, 720);
   };
 
   const startScan = async () => {
@@ -199,17 +236,28 @@ export default function Camera() {
   );
 
   const Slot = ({ side, src }) => (
-    <label className={`slot ${src ? 'filled' : ''}`} data-od-id={side === 'front' ? 'slot-front' : 'slot-back'}>
+    <div className={`slot ${src ? 'filled' : ''}`} style={{ position: 'relative' }} data-od-id={side === 'front' ? 'slot-front' : 'slot-back'}>
       {!src && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <button className="btn btn-primary" onClick={openLive} style={{ padding: '12px 24px' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 24, height: 24, marginRight: 8, verticalAlign: 'middle' }}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+            เปิดกล้องสด
+          </button>
+          <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>
+            อัปโหลดรูป
+            <input type="file" accept="image/*" aria-label={`อัปโหลดภาพด้าน${side === 'front' ? 'หน้า' : 'หลัง'}ของการ์ด`} onChange={(e) => onPick(side, e.target.files?.[0])} style={{ display: 'none' }} />
+          </label>
+          <span className="slot-hint">หรือแตะเพื่อถ่ายรูปจากเครื่อง</span>
+        </div>
+      )}
+      {src && (
         <>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.2-2h8.2l1.2 2h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z" /><circle cx="12" cy="13" r="3.6" /></svg>
-          <span className="slot-label">{side === 'front' ? 'ด้านหน้า*' : 'ด้านหลัง (ถ้ามี)'}</span>
-          <span className="slot-hint">แตะเพื่อถ่าย</span>
+          <img src={src} alt="" />
+          <span className="slot-tag">{side === 'front' ? 'ด้านหน้า' : 'ด้านหลัง'}</span>
+          <button className="btn btn-sm btn-ghost" onClick={() => setFront(null)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)', color: '#fff' }}>เปลี่ยนรูป</button>
         </>
       )}
-      {src && <><img src={src} alt="" /><span className="slot-tag">{side === 'front' ? 'ด้านหน้า' : 'ด้านหลัง'}</span></>}
-      <input type="file" accept="image/*" aria-label={`อัปโหลดภาพด้าน${side === 'front' ? 'หน้า' : 'หลัง'}ของการ์ด`} onChange={(e) => onPick(side, e.target.files?.[0])} />
-    </label>
+    </div>
   );
 
   return (
@@ -224,12 +272,10 @@ export default function Camera() {
           .sanctum{background:var(--ink);color:var(--on-ink);border-radius:var(--radius);margin:16px var(--gut) 0;padding:26px var(--gut)}
           @media(min-width:768px){.sanctum{margin:20px 0 0;padding:34px 40px}}
           .slots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
-          .slot{position:relative;aspect-ratio:63/88;border:1.5px dashed oklch(98% 0 0 / .3);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;overflow:hidden;background:oklch(18% 0.012 250 / .4);transition:border-color .16s,background .16s}
-          .slot:hover{border-color:var(--accent);background:oklch(22% 0.012 250 / .5)}
+          .slot{position:relative;aspect-ratio:63/88;border:1.5px dashed oklch(98% 0 0 / .3);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;overflow:hidden;background:oklch(18% 0.012 250 / .4);transition:border-color .16s,background .16s}
           .slot svg{width:30px;height:30px;color:var(--on-ink-mute);stroke-width:1.4;opacity:.8}
           .slot-label{font:600 13px/1 var(--body);color:var(--on-ink)}
           .slot-hint{font:400 11px/1 var(--mono);color:var(--on-ink-mute)}
-          .slot input{position:absolute;inset:0;opacity:0;cursor:pointer}
           .slot.filled{border-style:solid;border-color:var(--accent)}
           .slot.filled img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
           .slot-tag{position:absolute;left:8px;bottom:8px;z-index:1;background:oklch(18% 0.012 250 / .8);color:var(--on-ink);font:500 10.5px/1 var(--mono);padding:5px 8px;border-radius:4px}
@@ -247,8 +293,33 @@ export default function Camera() {
           .match-card.sel{border-color:var(--accent);box-shadow:0 0 0 2px oklch(60% 0.18 250 / .25)}
           .match-thumb{aspect-ratio:63/88;background:var(--plate);overflow:hidden}
           .match-thumb img{width:100%;height:100%;object-fit:contain}
+          .live-overlay{position:fixed;inset:0;background:#000;z-index:1000;display:flex;flex-direction:column}
+          .live-video{flex:1;object-fit:cover;width:100%}
+          .live-ui{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:24px}
+          .viewfinder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70%;aspect-ratio:63/88;border:2px solid var(--accent);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5)}
+          .shutter-btn{width:72px;height:72px;border-radius:50%;border:4px solid #fff;background:transparent;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;padding:0}
+          .shutter-btn:active{background:rgba(255,255,255,0.3)}
+          .shutter-inner{width:56px;height:56px;border-radius:50%;background:#fff}
         `}</style>
         <div className="page">
+          {showLive && (
+            <div className="live-overlay">
+              <video ref={videoRef} autoPlay playsInline className="live-video" />
+              <div className="live-ui">
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <button className="btn btn-ghost" onClick={closeLive} style={{ color: '#fff' }}>✕ ปิด</button>
+                  <div className="fine" style={{ color: '#fff' }}>ส่องการ์ดให้ตรงกรอบ</div>
+                  <div style={{ width: 40 }}></div>
+                </div>
+                <div className="viewfinder"></div>
+                <div>
+                  <button className="shutter-btn" onClick={snap}><div className="shutter-inner"></div></button>
+                  <div className="fine" style={{ textAlign: 'center', color: '#fff', marginBottom: 12 }}>แตะปุ่มเพื่อถ่ายภาพ</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {step === 'capture' && (
             <section data-od-id="camera-capture">
               <Rail n={1} />
@@ -256,7 +327,7 @@ export default function Camera() {
                 <span className="kicker kicker-gold" style={{ marginBottom: 10 }}>ระบุการ์ดจากรูป</span>
                 <h2 style={{ color: 'var(--on-ink)', fontSize: 23, marginBottom: 8 }}>ถ่ายการ์ดให้เต็มกรอบ</h2>
                 <div className="btn-row" role="radiogroup" aria-label="ประเภทการ์ด" style={{ marginBottom: 14 }}>
-                  {[['pokemon', 'โปเกมอน'], ['yugioh', 'ยูกิ'], ['onepiece', 'วันพีซ'], ['football', 'ฟุตบอล']].map(([k, label]) => (
+                  {[['pokemon', 'โปเกมอน'], ['yugioh', 'ยูกิ'], ['onepiece', 'วันพีซ']].map(([k, label]) => (
                     <button key={k} role="radio" aria-checked={game === k} className={`btn btn-sm ${game === k ? 'btn-primary' : ''}`} onClick={() => setGame(k)}>{label}</button>
                   ))}
                 </div>

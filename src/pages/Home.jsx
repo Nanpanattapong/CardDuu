@@ -100,7 +100,6 @@ export default function Home() {
   const [top, setTop] = useState([]);
   const [topYgo, setTopYgo] = useState([]);
   const [topOp, setTopOp] = useState([]);
-  const [topFb, setTopFb] = useState([]);
 
   useEffect(() => {
     let alive = true;
@@ -113,14 +112,13 @@ export default function Home() {
       if (alive) setTop(list);
     });
     // โหลด metadata เกมอื่นเมื่อ idle เพื่อไม่บล็อก first paint ของหน้าแรก
-    const loadSecondary = () => Promise.all(['yugioh', 'onepiece', 'football'].map(loadGameDb)).then(([ygo, op, fb]) => {
+    const loadSecondary = () => Promise.all(['yugioh', 'onepiece'].map(loadGameDb)).then(([ygo, op]) => {
       if (!alive) return;
       const getTop = (meta) => Object.entries(meta.priceOf)
         .map(([code, p]) => ({ code, name: meta.nameOf[code] || code, price: p }))
         .sort((a, b) => b.price - a.price).slice(0, 4);
       setTopYgo(getTop(ygo));
       setTopOp(getTop(op));
-      setTopFb(getTop(fb));
     });
     if ('requestIdleCallback' in window) requestIdleCallback(loadSecondary, { timeout: 2500 });
     else setTimeout(loadSecondary, 500);
@@ -285,18 +283,6 @@ export default function Home() {
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))' }}>
               {topOp.map((c) => (
                 <Link key={c.code} to={`/datacard?game=onepiece&q=${encodeURIComponent(c.code)}`} className="card-item">
-                  <span className="card-thumb" style={{ aspectRatio: '63/88' }}><img src={imgUrl(c.code)} alt={c.name} loading="lazy" style={{ objectFit: 'contain' }} /></span>
-                  <span className="card-body"><span className="kicker">{c.code}</span><h3>{c.name}</h3><span className="price">฿{baht(c.price)}</span></span>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          <section className="sect" data-od-id="home-library-fb">
-            <div className="sect-head"><div><h2>การ์ดราคาสูงสุด (ฟุตบอล)</h2></div><Link to="/datacard?game=football" className="link">ดูฐานข้อมูล →</Link></div>
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))' }}>
-              {topFb.map((c) => (
-                <Link key={c.code} to={`/datacard?game=football&q=${encodeURIComponent(c.code)}`} className="card-item">
                   <span className="card-thumb" style={{ aspectRatio: '63/88' }}><img src={imgUrl(c.code)} alt={c.name} loading="lazy" style={{ objectFit: 'contain' }} /></span>
                   <span className="card-body"><span className="kicker">{c.code}</span><h3>{c.name}</h3><span className="price">฿{baht(c.price)}</span></span>
                 </Link>

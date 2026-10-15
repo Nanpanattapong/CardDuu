@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import Nav from '../components/Nav.jsx';
 import PriceChart from '../components/PriceChart.jsx';
 import { Auth, api, baht } from '../lib.js';
-import { imgUrl, bestCode, hasImage, loadPrices, loadGameDb, metaCardInfo, gameOf } from '../lib/cards.js';
+import { imgUrl, bestCode, hasImage, loadPrices, loadRarities, loadGameDb, metaCardInfo, gameOf } from '../lib/cards.js';
 
 const PAGE = 60;
-const GAMES = [['pokemon', 'โปเกมอน'], ['yugioh', 'ยูกิ'], ['onepiece', 'วันพีซ'], ['football', 'ฟุตบอล']];
+const GAMES = [['pokemon', 'โปเกมอน'], ['yugioh', 'ยูกิ'], ['onepiece', 'วันพีซ']];
 // ค่าตาม pokemontcg.io (types[0] / supertype) — ดู scripts/fetch-prices.py
 const TYPES = [['Fire', 'ไฟ'], ['Water', 'น้ำ'], ['Grass', 'หญ้า'], ['Lightning', 'สายฟ้า'], ['Psychic', 'พลังจิต'], ['Fighting', 'ต่อสู้'],
   ['Darkness', 'ความมืด'], ['Metal', 'เหล็ก'], ['Fairy', 'แฟรี่'], ['Dragon', 'มังกร'], ['Colorless', 'ไร้สี'], ['Trainer', 'เทรนเนอร์'], ['Energy', 'พลังงาน']];
@@ -40,6 +40,11 @@ export default function Datacard() {
       setSetOf(null); setRarityOf(null); setTypeList(TYPES); setRarityList([]); setRaritySel('all');
       fetch('/data/card-index.json').then((r) => r.json()).then((d) => live && setIndex(d)).catch(() => {});
       fetch('/data/card-types.json').then((r) => r.json()).then((d) => live && setTypes(d)).catch(() => {});
+      loadRarities().then((d) => {
+        if (!live) return;
+        setRarityOf(d);
+        setRarityList([...new Set(Object.values(d).filter(Boolean))].sort());
+      });
       fetch('/data/sets.json').then((r) => r.json()).then((d) => live && setSets(d)).catch(() => {});
       loadPrices().then((d) => live && setPriceDb(d.prices || {}));
     } else {
@@ -131,11 +136,15 @@ export default function Datacard() {
                   {typeList.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
                 </select>
               </div>
-              {rarityList.length > 0 && <div className="sel-wrap" style={{ flex: 1, minWidth: 120 }}>
-                <select value={raritySel} onChange={(e) => { setRaritySel(e.target.value); setCount(PAGE); }} aria-label="ความหายาก">
-                  <option value="all">ทุกความหายาก</option>
-                  {rarityList.map((rarity) => <option key={rarity} value={rarity}>{rarity}</option>)}
-                </select>
+              {rarityList.length > 0 && <div style={{ flex: '1 0 100%', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', padding: '4px 0' }} role="radiogroup" aria-label="ความแรร์">
+                <b className="fine" style={{ marginRight: 2 }}>ความแรร์:</b>
+                {['all', ...rarityList].map((rarity) => (
+                  <button key={rarity} type="button" role="radio" aria-checked={raritySel === rarity}
+                    className={`btn btn-sm ${raritySel === rarity ? 'btn-primary' : ''}`}
+                    onClick={() => { setRaritySel(rarity); setCount(PAGE); }}>
+                    {rarity === 'all' ? 'ทั้งหมด' : rarity}
+                  </button>
+                ))}
               </div>}
               <div className="sel-wrap" style={{ flex: 1, minWidth: 140 }}>
                 <select value={sort} onChange={(e) => { setSort(e.target.value); setCount(PAGE); }} aria-label="เรียง">

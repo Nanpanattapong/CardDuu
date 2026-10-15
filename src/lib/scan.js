@@ -2,7 +2,7 @@
 // ขั้น 2 (API): POST /api/identify เทียบเวกเตอร์กับการ์ด 20,670 ใบ → ใบไหน / ไม่รู้จัก
 // ORT WASM รันใน web worker → main thread ไม่ค้าง
 import { api } from '../lib.js';
-import { loadIndex, loadYgoMeta, loadOpMeta, loadFbMeta } from './cards.js';
+import { loadIndex, loadYgoMeta, loadOpMeta } from './cards.js';
 import { pickCards } from './obb.js';
 import { createWorker } from 'tesseract.js';
 import ScanWorker from './scan.worker.js?worker';
@@ -81,54 +81,45 @@ function rgba224(cv) {
 const toDataUrl = (cv) => cv.convertToBlob({ type: 'image/jpeg', quality: 0.85 })
   .then((b) => new Promise((r) => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }));
 
-// ครอปเฉพาะโซนตัวเลขมุมการ์ด (ด้านล่าง) และอ่านด้วย OCR — ขยาย 3× + ทำขาวดำก่อนส่งให้ Tesseract
+// อ่านเลขเฉพาะใบที่ DINOv2 ไม่มั่นใจ: ลดเวลารอบปกติ แต่เก็บทางช่วยแยกใบคล้ายกันไว้
 let _ocrWorkerP = null;
 async function ocrWorker() {
   if (_ocrWorkerP) return _ocrWorkerP;
   const w = await createWorker('eng');
-  // ล็อค charset ให้หาแต่ตัวเลขกับ / และบังคับโหมดบรรทัดเดียว (psm 7) — อ่านเลขเล็กๆ แม่นขึ้นมาก
   try { await w.setParameters({ tessedit_char_whitelist: '0123456789/ ', tessedit_pageseg_mode: '7' }); } catch {}
   _ocrWorkerP = w;
   return w;
 }
 
 async function ocrCardNumber(cv) {
-  const w = cv.width, h = cv.height;
-  const zoneH = Math.round(h * 0.20), zoneW = Math.round(w * 0.55);
-  const scale = 3;
-  // 1) ครอปมุมล่างซ้าย
+  const w = cv.width, h = cv.height, zoneH = Math.round(h * 0.20), zoneW = Math.round(w * 0.55), scale = 3;
   const src = new OffscreenCanvas(zoneW, zoneH);
   src.getContext('2d').drawImage(cv, 0, h - zoneH, zoneW, zoneH, 0, 0, zoneW, zoneH);
-  // 2) ขยาย 3× แบบไม่เบลอ (เอาขาวดำออกก่อนเพราะอาจจะทำให้ตัวเลขหายในบางสีการ์ด)
   const up = new OffscreenCanvas(zoneW * scale, zoneH * scale);
   const g = up.getContext('2d');
   g.imageSmoothingEnabled = false;
   g.drawImage(src, 0, 0, zoneW * scale, zoneH * scale);
-
-  const debugCropUrl = await toDataUrl(up);
-
-  const worker = await ocrWorker();
-  const { data: { text } } = await worker.recognize(up);
+  const { data: { text } } = await (await ocrWorker()).recognize(up);
   const clean = String(text || '').replace(/[oO]/g, '0').replace(/(\d)\!/g, '$1/').replace(/\!(\d)/g, '/$1');
   const m = clean.match(/(\d{1,3})\s*[\/\!]\s*(\d{1,3})/);
-  const res = m ? `${m[1].padStart(3, '0')}/${m[2].padStart(3, '0')}` : null;
-  return { num: res, debugCropUrl };
+  return m ? `${m[1].padStart(3, '0')}/${m[2].padStart(3, '0')}` : null;
 }
 
 // ทุกกรอบลอง 2 ทิศ (ตั้งตรง/กลับหัว) → เก็บทิศที่คะแนนสูงกว่า; API รับได้ 12 เวกเตอร์ = 6 กรอบ
+// ponytail: รวมทุก crop ทั้งหมดส่งรอบเดียว ลดเวลา latency ของเครือข่ายมือถือ
 async function identify(img, boxes, game) {
   if (!boxes.length) return [];
   const crops = boxes.flatMap((o) => [cropObb(img, o), cropObb(img, o, 252, true)]);
-  // กรอบสำหรับ OCR ขยายแนวตั้ง 28% เผื่อ YOLO ตัดขอบล่าง (เลขชุดหลุดกรอบ → OCR ได้ "" ว่าง)
-  const ocrBoxes = boxes.map(b => ({ ...b, w: b.w * 1.28 }));
-  const ocrCrops = ocrBoxes.flatMap((o) => [cropObb(img, o), cropObb(img, o, 252, true)]);
   const px = crops.map(rgba224);
   const vecs = await workerCall({ type: 'embed', crops: px }, px.map((p) => p.buffer));
   const { results } = await api('/api/identify', { method: 'POST', body: { vecs, game }, auth: false });
 
-  // ชื่อสำหรับแมปเลขญี่ปุ่น→อังกฤษผ่าน TCGdex (API ส่งมาแค่ code)
+  const needsOcr = game === 'pokemon' && results.some((r, i) => r.score < 0.82 || (results[i ? i - 1 : i].code === r.code));
+  const ocrCrops = needsOcr ? boxes.flatMap((o) => [cropObb(img, { ...o, w: o.w * 1.28 }), cropObb(img, { ...o, w: o.w * 1.28 }, 252, true)]) : [];
+
+  // ชื่อสำหรับแมปเลขญี่ปุ่น→อังกฤษผ่าน TCGdex (API ส่งมาแค่รอบ OCR)
   let nameOf = () => '';
-  if (game === 'pokemon') {
+  if (needsOcr) {
     try {
       const idx = await loadIndex();
       const m = {};
@@ -141,25 +132,20 @@ async function identify(img, boxes, game) {
     const k0 = 2 * i, k1 = 2 * i + 1;
     let k = results[k1].score > results[k0].score + 0.05 ? k1 : k0;
 
-    if (game === 'pokemon') {
+    // ใบที่ DINOv2 มั่นใจแล้วข้าม OCR ไปเลย; ที่เหลืออ่านเลขบนการ์ดเพื่อแยกใบที่ภาพเหมือนกัน
+    if (needsOcr && results[k].score < 0.82) {
       try {
-        const { num, debugCropUrl } = await ocrCardNumber(ocrCrops[k]);
-        console.log(`[BOX ${i}] OCR result:`, num);
+        const num = await ocrCardNumber(ocrCrops[k]);
         if (num) {
-          const nm = nameOf(results[k].code);
-          console.log(`[BOX ${i}] looking up JA card for num:`, num, 'approx name:', nm);
-          const hit = await api(`/api/ja-lookup?num=${encodeURIComponent(num)}&name=${encodeURIComponent(nm)}`, { auth: false });
-          console.log(`[BOX ${i}] JA lookup returned:`, hit);
+          const hit = await api(`/api/ja-lookup?num=${encodeURIComponent(num)}&name=${encodeURIComponent(nameOf(results[k].code))}`, { auth: false });
           if (hit?.code) {
             const cand = results[k].candidates || [results[k]];
             const pos = cand.findIndex((c) => c.code === hit.code);
             const base = pos >= 0 ? cand[pos] : { code: hit.code, score: results[k].score };
-            results[k] = { ...base, name: hit.name, score: Math.max(base.score, 0.8), candidates: cand, known: true, ocrMatch: true, ocrCropUrl: debugCropUrl };
+            results[k] = { ...base, name: hit.name, score: Math.max(base.score, 0.8), candidates: cand, known: true, ocrMatch: true };
           }
         }
-      } catch (err) {
-        console.error(`[BOX ${i}] OCR failed with error:`, err);
-      }
+      } catch {}
     }
 
     return { obb, crop: crops[k], result: results[k] };
@@ -168,13 +154,12 @@ async function identify(img, boxes, game) {
 
 // → [{obb, crop, code, name, score, known}] เรียงตามตำแหน่งในรูป; known=false = ไม่ตรงกับการ์ดในฐานข้อมูล
 // วัดบนภาพสังเคราะห์ 120 ภาพ (การ์ดไทยบนพื้นลาย สุ่มขนาด/มุม): แบบเดิม 57% → แบบนี้ 78%
-// game = 'pokemon' | 'yugioh' | 'onepiece' | 'football' → เทียบกับฐานเวกเตอร์ของเกมนั้น (YOLO/DINOv2 ใช้ตัวเดียวกัน)
+// game = 'pokemon' | 'yugioh' | 'onepiece' → เทียบกับฐานเวกเตอร์ของเกมนั้น (YOLO/DINOv2 ใช้ตัวเดียวกัน)
 export async function detectAndIdentify(src, game = 'pokemon') {
   const img = await loadImg(src);
   const { rgba640, lb } = to640(img);
   const namesP = game === 'yugioh' ? loadYgoMeta().then((m) => (c) => m[c.slice(4)]?.[0])
     : game === 'onepiece' ? loadOpMeta().then((m) => (c) => m[c.slice(3)]?.[0])
-    : game === 'football' ? loadFbMeta().then((m) => (c) => m[c.slice(3)]?.[0])
     : loadIndex().then((idx) => {
     const codeToName = {};
     for (const [name, codes] of Object.entries(idx)) for (const c of codes) codeToName[c] = name;

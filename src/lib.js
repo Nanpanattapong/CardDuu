@@ -74,7 +74,7 @@ export const Store = {
   set(key, val) { try { localStorage.setItem(this.PREFIX + key, JSON.stringify(val)); } catch {} return val; },
 };
 
-export function readImage(file, cb, max = 900) {
+export function readImage(file, cb, max = 720) {
   if (!file || !/^image\//.test(file.type)) { cb(''); return; }
   const url = URL.createObjectURL(file);
   const img = new Image();

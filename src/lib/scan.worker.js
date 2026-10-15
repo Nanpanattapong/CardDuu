@@ -20,9 +20,8 @@ self.onmessage = async (e) => {
   let ok = true, err = null, data = null;
   try {
     if (type === 'embed') {
-      // crops = [RGBA 224×224] → DINOv2-small → เวกเตอร์ 384 มิติ (normalize แล้ว)
+      // DINOv2 export ใช้ batch=1 จึงรันทีละ crop เพื่อคง compatibility ของโมเดล
       const s = await ortSess('/models/card-embed.onnx');
-      const ort = await import('onnxruntime-web/wasm');
       data = [];
       for (const px of crops) {
         const chw = new Float32Array(3 * 224 * 224);

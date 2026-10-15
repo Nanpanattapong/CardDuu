@@ -9,7 +9,6 @@ export const imgUrl = (code) => {
   if (!code) return '';
   if (code.startsWith('ygo-')) return `/ygo/${code.slice(4)}.jpg`;
   if (code.startsWith('op-')) return `/onepiece/${code.slice(3)}.jpg`;
-  if (code.startsWith('fb-')) return `/football/${code}.jpg`;
   return localCodes.has(code)
     ? `/cards/${code}.png`
     : `https://images.pokemontcg.io/${code.split('-')[0]}/${code.split('-').slice(1).join('/')}.png`;
@@ -24,6 +23,11 @@ export const bestCode = (codes) => codes.find((c) => !noImageCodes.has(c)) || co
 export const loadPrices = (() => {
   let p = null;
   return () => (p ??= fetch('/data/prices.json').then(r => r.json()).catch(() => ({ prices: {} })));
+})();
+
+export const loadRarities = (() => {
+  let p = null;
+  return () => (p ??= fetch('/data/card-rarities.json').then(r => r.json()).catch(() => ({})));
 })();
 
 export const loadIndex = (() => {
@@ -43,21 +47,14 @@ export const loadOpMeta = (() => {
   return () => (p ??= fetch('/data/onepiece-meta.json').then(r => r.json()).catch(() => { p = null; return {}; }));
 })();
 
-// ฟุตบอล: {artId: [ชื่อ, ความหายาก, สโมสร, ฤดูกาล]}
-export const loadFbMeta = (() => {
-  let p = null;
-  return () => (p ??= fetch('/data/football-meta.json').then(r => r.json()).catch(() => { p = null; return {}; }));
-})();
-
 export const THB_PER_USD = 35;
 const META = {
   yugioh: { pre: 'ygo-', load: loadYgoMeta, set: (m) => m[2], type: (m) => m[1], rarity: (m) => m[4], usd: (m) => m[5] },
   onepiece: { pre: 'op-', load: loadOpMeta, set: (m) => m[1], type: (m) => [m[2], m[4]].filter(Boolean).join(' · '), rarity: (m) => m[3], usd: (m) => m[7] },
-  football: { pre: 'fb-', load: loadFbMeta, set: (m) => m[2], type: (m) => m[0], rarity: (m) => m[1], usd: (m) => null },
 };
-export const gameOf = (code) => code?.startsWith('ygo-') ? 'yugioh' : code?.startsWith('op-') ? 'onepiece' : code?.startsWith('fb-') ? 'football' : 'pokemon';
+export const gameOf = (code) => code?.startsWith('ygo-') ? 'yugioh' : code?.startsWith('op-') ? 'onepiece' : 'pokemon';
 
-// ยูกิ/วันพีซ/ฟุตบอล → รูปแบบเดียวกับโปเกมอนในหน้า /datacard
+// ยูกิ/วันพีซ → รูปแบบเดียวกับโปเกมอนในหน้า /datacard
 export const loadGameDb = (() => {
   const cache = {};
   return (game) => (cache[game] ??= META[game].load().then((meta) => {
@@ -74,7 +71,7 @@ export const loadGameDb = (() => {
   }));
 })();
 
-// ข้อมูล + ราคาของการ์ดยูกิ/วันพีซ/ฟุตบอล ในรูปแบบเดียวกับ /api/prices
+// ข้อมูล + ราคาของการ์ดยูกิ/วันพีซ ในรูปแบบเดียวกับ /api/prices
 export async function metaCardInfo(code) {
   const game = gameOf(code), g = META[game];
   const id = code.slice(g.pre.length), m = (await g.load())[id] || [];

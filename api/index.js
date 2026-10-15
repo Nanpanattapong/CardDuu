@@ -514,7 +514,7 @@ app.get('/api/ja-lookup', async (c) => {
 let embDb = {};
 const loadEmb = async (c, game = 'pokemon') => {
   if (embDb[game]) return embDb[game];
-  const sfx = game === 'yugioh' ? '-yugioh' : game === 'onepiece' ? '-onepiece' : game === 'football' ? '-football' : '';
+  const sfx = game === 'yugioh' ? '-yugioh' : game === 'onepiece' ? '-onepiece' : '';
   try {
     const [bin, codes] = await Promise.all([
       fetch(`${c.env.EMB_BASE}/data/card-emb${sfx}.bin`).then((r) => r.arrayBuffer()),
@@ -533,7 +533,7 @@ const KNOWN_SCORE = 0.7;
 app.post('/api/identify', async (c) => {
   const { vecs, game } = await body(c);
   if (!Array.isArray(vecs) || !vecs.length || vecs.length > 12 || vecs.some((v) => !Array.isArray(v) || v.length !== 384)) throw bad('ต้องส่ง vecs = [[384 ตัวเลข], ...] ไม่เกิน 12 ชุด');
-  const { E, codes } = await loadEmb(c, ['yugioh', 'onepiece', 'football'].includes(game) ? game : 'pokemon');
+  const { E, codes } = await loadEmb(c, ['yugioh', 'onepiece'].includes(game) ? game : 'pokemon');
   const results = vecs.map((v) => {
     const q = Float32Array.from(v, Number);
     const scores = [];
