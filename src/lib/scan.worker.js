@@ -1,15 +1,19 @@
 // Module worker: ดาวน์โหลดโมเดล + onnxruntime ครั้งเดียว, เธรดนี้รัน inference → main ไม่ค้าง
 import { decodeObb } from './obb.js';
 
-const sess = {};
+const sess = {}, loading = {};
 
 async function ortSess(model) {
   if (sess[model]) return sess[model];
-  const ort = await import('onnxruntime-web/wasm');
-  const res = await fetch(model);
-  if (!res.ok) throw new Error(`โหลดโมเดลไม่ได้ ${res.status}`);
-  const bytes = new Uint8Array(await res.arrayBuffer());
-  return (sess[model] = await ort.InferenceSession.create(bytes, { executionProviders: ['wasm'] }));
+  if (loading[model]) return loading[model];
+  loading[model] = (async () => {
+    const ort = await import('onnxruntime-web/wasm');
+    const res = await fetch(model);
+    if (!res.ok) throw new Error(`โหลดโมเดลไม่ได้ ${res.status}`);
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    return (sess[model] = await ort.InferenceSession.create(bytes, { executionProviders: ['wasm'] }));
+  })();
+  try { return await loading[model]; } finally { delete loading[model]; }
 }
 
 // ค่าเดียวกับ prep() ใน scripts/embed-cards.py
@@ -19,7 +23,10 @@ self.onmessage = async (e) => {
   const { id, type, rgba640, lb, crops } = e.data;
   let ok = true, err = null, data = null;
   try {
-    if (type === 'embed') {
+    if (type === 'preload') {
+      await Promise.all([ortSess('/models/card-detect.onnx'), ortSess('/models/card-embed.onnx')]);
+      data = true;
+    } else if (type === 'embed') {
       // DINOv2 export ใช้ batch=1 จึงรันทีละ crop เพื่อคง compatibility ของโมเดล
       const ort = await import('onnxruntime-web/wasm');
       const s = await ortSess('/models/card-embed.onnx');

@@ -5,7 +5,7 @@ import PriceChart from '../components/PriceChart.jsx';
 import CardOverlay from '../components/CardOverlay.jsx';
 import { Auth, api, baht, readImage } from '../lib.js';
 import { imgUrl, identifyCard, loadIndex, loadSets, metaCardInfo, gameOf } from '../lib/cards.js';
-import { detectAndIdentify } from '../lib/scan.js';
+import { detectAndIdentify, preloadModels } from '../lib/scan.js';
 
 const SAMPLE = '/assets/charizard-ex-sir-sv3-223.png';
 
@@ -132,6 +132,10 @@ export default function Camera() {
 
   const ready = !!front;
   const nCards = { yugioh: '14,771', onepiece: '4,212' }[game] || '20,670';
+
+  useEffect(() => {
+    preloadModels().catch(() => {});
+  }, []);
 
   const onPick = (side, file) => {
     if (!file) return;

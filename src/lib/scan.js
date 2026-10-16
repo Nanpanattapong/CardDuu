@@ -27,6 +27,14 @@ function workerCall(payload, transfer) {
   });
 }
 
+let _preload = null;
+export function preloadModels() {
+  return (_preload ??= workerCall({ type: 'preload' }).catch((err) => {
+    _preload = null;
+    throw err;
+  }));
+}
+
 function loadImg(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
