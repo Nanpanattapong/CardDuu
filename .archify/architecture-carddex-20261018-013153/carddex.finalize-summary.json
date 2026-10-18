@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\carddex\\.archify\\architecture-carddex-20261018-013153\\candidate.json",
+    "sha256": "c59e2e99a1090c4809d9d564cb245ffc8995a30da5f9006dfd6bb48a9c53710f",
+    "bytes": 2918
+  },
+  "artifact": {
+    "path": "D:\\carddex\\.archify\\architecture-carddex-20261018-013153\\carddex.html",
+    "sha256": "c632cceadd0ccf6a9efcd22c56239b1350731d3e1e5eccb2e452aa8745313554",
+    "bytes": 757347
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\carddex\\.archify\\architecture-carddex-20261018-013153\\carddex.finalize.json",
+    "summaryReceipt": "D:\\carddex\\.archify\\architecture-carddex-20261018-013153\\carddex.finalize-summary.json",
+    "browserCheckReceipt": "D:\\carddex\\.archify\\architecture-carddex-20261018-013153\\carddex.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.0.1",
+    "availableVersion": "3.1.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.1.0",
+    "severity": "normal",
+    "checkedAt": "2026-10-17T18:35:15.584Z",
+    "source": "cache",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-17T18:35:15.584Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2220
+}

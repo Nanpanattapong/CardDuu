@@ -8,6 +8,7 @@ import { Auth, api, baht, readImage } from '../lib.js';
 export default function Market() {
   const [params] = useSearchParams();
   const [listings, setListings] = useState(null);
+  const [game, setGame] = useState('all'); // all, pokemon, yugioh, onepiece
   const [savedIds, setSavedIds] = useState(null); // Set ids
   const [filter, setFilter] = useState('all');
   const [setSel, setSetSel] = useState('all');
@@ -63,7 +64,14 @@ export default function Market() {
     return 'other';
   };
   const setsFromEra = [...new Set(items.map((l) => String(l.era || '').split('·')[0].trim()).filter(Boolean))].sort();
+  const gameOfListing = (l) => {
+    const text = `${l.name} ${l.era} ${l.desc || ''}`.toLowerCase();
+    if (/yugioh|ยูกิ|yu-gi|blue-eyes|dark magician|แบล็คเมจิค/.test(text)) return 'yugioh';
+    if (/one piece|วันพีซ|onepiece|op-\d/.test(text)) return 'onepiece';
+    return 'pokemon';
+  };
   const filtered = items.filter((l) => {
+    if (game !== 'all' && gameOfListing(l) !== game) return false;
     if (filter === 'under-5000' && l.price >= 5000) return false;
     if (filter === '5000-15000' && (l.price < 5000 || l.price > 15000)) return false;
     if (filter === 'over-15000' && l.price <= 15000) return false;
@@ -81,10 +89,16 @@ export default function Market() {
   });
 
   const detail = detailId ? items.find((l) => l.id === detailId) : null;
+  const listingCode = (l) => {
+    const text = `${l?.image || ''} ${l?.name || ''} ${l?.era || ''}`;
+    return text.match(/\b([a-z]{2,}\d*(?:pt\d+)?-\d{1,3})\b/i)?.[1]?.toLowerCase() || '';
+  };
   useEffect(() => {
     if (!detail) { setPrices(null); return; }
-    api(`/api/prices?name=${encodeURIComponent(detail.name)}`, { auth: false }).then(setPrices).catch(() => setPrices([]));
-  }, [detailId, detail?.name]);
+    const code = listingCode(detail);
+    const qs = `name=${encodeURIComponent(detail.name)}${code ? `&code=${encodeURIComponent(code)}` : ''}`;
+    api(`/api/prices?${qs}`, { auth: false }).then(setPrices).catch(() => setPrices([]));
+  }, [detailId, detail?.name, detail?.image]);
 
   const isSaved = !!(detailId && savedIds?.has(detailId));
 
@@ -117,12 +131,13 @@ export default function Market() {
     const fd = new FormData(e.target);
     const name = String(fd.get('name') || '').trim();
     const price = parseInt(String(fd.get('price') || '0'), 10) || 0;
-    const era = String(fd.get('era') || '').trim() || 'ไม่ระบุ';
+    const series = String(fd.get('series') || '').trim() || 'ไม่ระบุ';
+    const condition = String(fd.get('condition') || '').trim() || 'ไม่ระบุ';
     const desc = String(fd.get('desc') || '').trim();
     if (!name || price <= 0 || !desc) return showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
     if (!Auth.session()) return showToast('ต้องเข้าสู่ระบบก่อน');
     try {
-      await api('/api/listings', { method: 'POST', body: { name, price, era, desc, image: sellImage || undefined } });
+      await api('/api/listings', { method: 'POST', body: { name, price, era: `${fd.get('game')} · ${series} · ${condition}`, desc, image: sellImage || undefined } });
       await refreshListings();
       await refreshSaved();
       setShowSell(false); setSellImage(''); setSellPreview(''); e.target.reset();
@@ -187,8 +202,13 @@ export default function Market() {
         `}</style>
         <div className="page">
           <section data-od-id="market-header">
-            <h1 style={{ font: '700 28px/1.2 var(--display)', marginBottom: 8 }}>ตลาดการ์ดโปเกมอน</h1>
-            <p style={{ font: '14px var(--body)', color: 'var(--muted)', margin: '0 0 16px' }}>ค้นหาและซื้อขายการ์ดสะสม พร้อมเช็คราคากลางอ้างอิง</p>
+            <h1 style={{ font: '700 28px/1.2 var(--display)', marginBottom: 8 }}>ตลาดการ์ดสะสม</h1>
+            <p style={{ font: '14px var(--body)', color: 'var(--muted)', margin: '0 0 16px' }}>ค้นหาและซื้อขายการ์ดสะสมทุกเกม ทุกชุด ทุกสภาพ พร้อมเช็คราคากลางอ้างอิง</p>
+            <div className="chip-row" style={{ padding: 0, marginBottom: 14 }}>
+              {[['all', 'ทุกเกม'], ['pokemon', 'โปเกมอน'], ['yugioh', 'ยูกิ'], ['onepiece', 'วันพีซ']].map(([k, label]) => (
+                <button key={k} className={`chip ${game === k ? 'on' : ''}`} onClick={() => { setGame(k); setSetSel('all'); }}>{label}</button>
+              ))}
+            </div>
             <div className="market-bar">
               <div className="market-search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -293,29 +313,27 @@ export default function Market() {
       {showSell && (
         <div role="dialog" onClick={(e) => { if (e.target === e.currentTarget) setShowSell(false); }}>
           <div className="modal-panel">
-            <div className="modal-head"><h3>ลงขายการ์ดโปเกมอน</h3><button className="modal-close" data-od-id="sell-close" aria-label="ปิด" onClick={() => setShowSell(false)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+            <div className="modal-head"><h3>ลงขายการ์ดสะสม</h3><button className="modal-close" data-od-id="sell-close" aria-label="ปิด" onClick={() => setShowSell(false)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
             <form id="sell-form" className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }} onSubmit={onSell}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>ชื่อการ์ด / โปเกมอน *</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>เกมการ์ด *</label>
+                <select name="game" defaultValue="pokemon" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--surface)', color: 'var(--fg)' }}>
+                  <option value="pokemon">โปเกมอน (Pokémon TCG)</option><option value="yugioh">ยูกิ (Yu-Gi-Oh!)</option><option value="onepiece">วันพีซ (One Piece Card Game)</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>ชื่อการ์ด *</label>
                 <input name="name" required placeholder="เช่น Charizard ex SAR" list="sell-names" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6 }}
                   onChange={async (e) => {
                     const v = e.target.value;
                     if (!v || v.length < 2) return;
                     setSellPriceHint(null);
-                    try {
-                      api(`/api/prices?name=${encodeURIComponent(v)}`, { auth: false }).then(d => setSellPriceHint(d?.live?.marketThb || null)).catch(()=>{});
-
-                      const idx = JSON.parse(sessionStorage.getItem('card-index') || 'null') || await fetch('/data/card-index.json').then((r) => r.json()).then((j) => { sessionStorage.setItem('card-index', JSON.stringify(Object.keys(j).slice(0, 500))); return Object.keys(j); });
-                      const names = Array.isArray(idx) ? idx : Object.keys(idx);
-                      const match = names.filter((n) => n.toLowerCase().includes(v.toLowerCase())).slice(0, 30);
-                      const dl = document.getElementById('sell-names');
-                      if (dl) dl.innerHTML = match.map((n) => `<option value="${n}">`).join('');
-                    } catch {}
+                    try { api(`/api/prices?name=${encodeURIComponent(v)}`, { auth: false }).then(d => setSellPriceHint(d?.live?.marketThb || null)).catch(()=>{}); } catch {}
                   }} />
                 {sellPriceHint && <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4 }}>ราคากลางตลาดประมาณ: ฿{baht(sellPriceHint)}</div>}
                 <datalist id="sell-names" />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>ราคา (บาท) *</label><input name="price" type="number" required min="0" placeholder="1500" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6 }} /></div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>ซีรีส์ / สภาพ</label><input name="era" placeholder="เช่น SV3 · SAR · NM" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6 }} /></div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>ชุด / ซีรีส์</label><input name="series" placeholder="เช่น SV3, LOB, Romance Dawn" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6 }} /></div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>สภาพการ์ด</label><select name="condition" defaultValue="NM" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6, background: 'var(--surface)', color: 'var(--fg)' }}><option>NM — Near Mint</option><option>EX — Excellent</option><option>GD — Good</option><option>PL — Played</option><option>PSA 10</option><option>PSA 9</option><option>Graded (BGS/CGC)</option></select></div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}><label style={{ font: '600 13px var(--body)' }}>รายละเอียด *</label><textarea name="desc" required placeholder="สภาพการ์ด ตำหนิ ฯลฯ" style={{ padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 6 }} /></div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label style={{ font: '600 13px var(--body)' }}>ภาพการ์ด (ไม่บังคับ)</label>

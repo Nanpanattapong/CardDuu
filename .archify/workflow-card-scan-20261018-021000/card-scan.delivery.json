@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "eb4bf4aa-c269-4daa-8db7-cb832253dbf5",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "D:\\carddex\\.archify\\workflow-card-scan-20261018-021000\\candidate.json",
+  "output": "D:\\carddex\\.archify\\workflow-card-scan-20261018-021000\\card-scan.html",
+  "specification": {
+    "sha256": "ded0a4c075d22c633e138b06ae318e30418de399c2b67d9119f0660d2e4c2a22",
+    "bytes": 5890
+  },
+  "artifact": {
+    "sha256": "c5a817bed7be0bd78c120ff3bde58a18e4c942bd53f4560e4344a186c1f82b53",
+    "bytes": 765306
+  }
+}

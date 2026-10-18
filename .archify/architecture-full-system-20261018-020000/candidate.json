@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CardDex Full System Architecture",
+    "output": ".archify/architecture-full-system-20261018-020000/carddex-full.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "browser", "type": "frontend", "label": "Web App (SPA)", "sublabel": "React 18 / Vite", "pos": [50, 250], "size": [140, 70] },
+    { "id": "worker", "type": "frontend", "label": "Scan Worker", "sublabel": "In-Browser AI", "pos": [50, 100], "size": [140, 60], "tag": "ONNX Runtime" },
+    { "id": "assets", "type": "cloud", "label": "Static Assets", "sublabel": "CDN / Card Images", "pos": [260, 250], "size": [140, 60] },
+    { "id": "api-worker", "type": "backend", "label": "API Service", "sublabel": "Hono / Edge Worker", "pos": [480, 250], "size": [150, 70] },
+    { "id": "d1-db", "type": "database", "label": "D1 Database", "sublabel": "Edge SQLite", "pos": [720, 250], "size": [140, 70] },
+    { "id": "ext-apis", "type": "external", "label": "External APIs", "sublabel": "TCGdex / Pokemon / Google", "pos": [480, 80], "size": [150, 70] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "User Environment", "wraps": ["browser", "worker"] },
+    { "kind": "region", "label": "CardDex Core (Cloudflare)", "wraps": ["assets", "api-worker", "d1-db"] }
+  ],
+  "connections": [
+    { "id": "conn1", "from": "browser", "to": "worker", "label": "AI Inference/OCR", "fromSide": "top", "toSide": "bottom" },
+    { "id": "conn2", "from": "browser", "to": "assets", "label": "HTTPS/Static", "fromSide": "right", "toSide": "left" },
+    { "id": "conn3", "from": "browser", "to": "api-worker", "label": "API Calls", "fromSide": "bottom", "toSide": "bottom", "via": [[120, 360], [555, 360]] },
+    { "id": "conn4", "from": "api-worker", "to": "d1-db", "label": "Queries/Auth", "fromSide": "right", "toSide": "left" },
+    { "id": "conn5", "from": "api-worker", "to": "ext-apis", "label": "Data/Prices/Auth", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Client", "items": ["SPA handles UI/UX", "Web Worker runs YOLO/DINOv2 for instant detection", "OCR fallback for ambiguous card IDs"] },
+    { "dot": "emerald", "title": "Backend", "items": ["Edge API handles Auth (PBKDF2/JWT), Listings, Social Feed", "Vector identification on 20k+ cards", "Automated price history tracking (cron)"] },
+    { "dot": "amber", "title": "Data", "items": ["D1 provides persistent storage for all user-generated content", "External TCGdex/PokemonTCG APIs ensure data freshness"] }
+  ]
+}

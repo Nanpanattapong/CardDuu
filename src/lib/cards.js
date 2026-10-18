@@ -71,18 +71,28 @@ export const loadGameDb = (() => {
   }));
 })();
 
-// ข้อมูล + ราคาของการ์ดยูกิ/วันพีซ ในรูปแบบเดียวกับ /api/prices
 export async function metaCardInfo(code) {
   const game = gameOf(code), g = META[game];
   const id = code.slice(g.pre.length), m = (await g.load())[id] || [];
   const usd = g.usd(m);
+  const cardmarketUsd = game === 'yugioh' ? Number(m[6] || 0) : null;
   let number = id.split('_')[0], rarity = m[1];
   if (game === 'yugioh') { number = m[3]; rarity = m[4]; }
   else if (game === 'onepiece') { number = id.split('_')[0]; rarity = m[3]; }
+  const source = game === 'yugioh' ? 'YGOPRODeck API' : 'OPTCG API';
+  const sourceUrl = game === 'yugioh' ? 'https://ygoprodeck.com/' : 'https://optcgapi.com/';
   return {
     history: [],
     card: { number, rarity, set: { series: g.type(m), name: g.set(m) } },
-    live: usd ? { marketUsd: usd, marketThb: Math.round(usd * THB_PER_USD) } : null,
+    live: (usd || cardmarketUsd) ? {
+      marketUsd: usd || null,
+      marketThb: usd ? Math.round(usd * THB_PER_USD) : null,
+      cardmarketThb: cardmarketUsd ? Math.round(cardmarketUsd * THB_PER_USD) : null,
+      source,
+      sourceUrl,
+      tcgplayerUrl: game === 'yugioh' ? `https://www.tcgplayer.com/search/yugioh/product?q=${encodeURIComponent(m[0] || '')}` : `https://www.tcgplayer.com/search/one-piece-card-game/product?q=${encodeURIComponent(m[0] || '')}`,
+      cardmarketUrl: game === 'yugioh' && cardmarketUsd ? 'https://www.cardmarket.com/en/YuGiOh' : null,
+    } : null,
   };
 }
 

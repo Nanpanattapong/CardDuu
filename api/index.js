@@ -371,10 +371,10 @@ app.get('/api/prices', async (c) => {
   try {
     const qname = key.split(' ').slice(0, 2).join(' ');
     const headers = c.env.POKEMONTCG_API_KEY ? { 'X-Api-Key': c.env.POKEMONTCG_API_KEY } : {};
-    const sel = 'select=id,name,number,rarity,artist,set,tcgplayer,cardmarket';
+    const sel = 'id,name,number,rarity,artist,set,tcgplayer,cardmarket';
     const url = code
-      ? `https://api.pokemontcg.io/v2/cards/${code}?${sel}`
-      : `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(qname + '*')}&${sel}&pageSize=1`;
+      ? `https://api.pokemontcg.io/v2/cards/${code}?select=${encodeURIComponent(sel)}`
+      : `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(qname + '*')}&select=${encodeURIComponent(sel)}&pageSize=1`;
     // ponytail: pokemontcg.io ตอบ 5xx เป็นพักๆ → retry 1 ครั้ง; ถ้ายังพังบ่อยค่อย cache ลง D1
     let res = await fetch(url, { signal: AbortSignal.timeout(8000), headers });
     if (res.status >= 500) res = await fetch(url, { signal: AbortSignal.timeout(8000), headers });
@@ -389,7 +389,7 @@ app.get('/api/prices', async (c) => {
         };
       }
       const tp = card?.tcgplayer?.prices;
-      const marketUsd = tp?.holofoil?.market ?? tp?.normal?.market ?? tp?.reverseHolofoil?.market ?? tp?.unlimitedHolofoil?.market ?? null;
+      const marketUsd = tp?.holofoil?.market ?? tp?.normal?.market ?? tp?.reverseHolofoil?.market ?? tp?.unlimitedHolofoil?.market ?? tp?.holofoil?.mid ?? tp?.normal?.mid ?? null;
       const cm = card?.cardmarket?.prices;
       const cmEur = cm?.averageSellPrice ?? cm?.trendPrice ?? null;
       if (marketUsd || cmEur) {
@@ -471,12 +471,13 @@ app.get('/api/prices', async (c) => {
     } catch {}
   }
   // ทั้งสองเว็บไม่ให้ราคา (pokemontcg.io 500 บ่อย) → ใช้ราคาที่ดึงเก็บไว้ใน prices.json (scripts/fetch-prices.py)
-  if (!live && code) {
+  if (code && (!live || !live.marketThb)) {
     try {
       const { generatedAt, prices } = await loadPriceDb(c);
       const p = prices[code];
       if (p) {
         live = {
+          ...(live || {}),
           cardId: code, marketUsd: p.usd ?? (p.m ? +(p.m / Number(c.env.THB_PER_USD || 35)).toFixed(2) : null), marketThb: p.m ?? null, cardmarketThb: p.c ?? null,
           tcgplayer: [], cardmarket: null, tcgplayerUrl: null, cardmarketUrl: null, updatedAt: generatedAt?.slice(0, 10) ?? null,
         };

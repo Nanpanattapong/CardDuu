@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "CardDex Card Check Workflow",
+    "subtitle": "ขั้นตอนการวิเคราะห์และระบุการ์ดตั้งแต่เริ่มจนจบ",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-card-scan-20261018-021000/card-scan.html"
+  },
+  "lanes": [
+    { "id": "ui", "label": "UI (เบราว์เซอร์)" },
+    { "id": "worker", "label": "Web Worker (Local AI)" },
+    { "id": "api", "label": "API (Cloudflare Edge)" },
+    { "id": "fallback", "label": "ระบบเสริม (OCR Fallback)", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "p1", "label": "1. รับภาพ", "fromCol": 0, "toCol": 0 },
+    { "id": "p2", "label": "2. AI วิเคราะห์ภาพ", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "p3", "label": "3. ค้นหาฐานข้อมูล", "fromCol": 3, "toCol": 4 },
+    { "id": "p4", "label": "4. สรุปผล", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "g1", "label": "ประมวลผลบนเครื่องผู้ใช้", "lane": "worker", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "g2", "label": "ค้นหาเวกเตอร์ระดับ Edge", "lane": "api", "fromCol": 3, "toCol": 4, "variant": "default" },
+    { "id": "g3", "label": "แยกใบคล้ายด้วยเลขการ์ด", "lane": "fallback", "fromCol": 4, "toCol": 4, "variant": "dashed" }
+  ],
+  "mainPath": ["upload", "detect", "embed", "identify", "gate", "result"],
+  "nodes": [
+    { "id": "upload", "lane": "ui", "col": 0, "type": "frontend", "label": "อัปโหลดภาพการ์ด", "sublabel": "ย่อขนาดไม่เกิน 720px", "width": 140 },
+    { "id": "detect", "lane": "worker", "col": 1, "type": "backend", "label": "YOLOv8-OBB", "sublabel": "ตรวจหากรอบการ์ด (640×640)", "tag": "หาพิกัดและมุมเอียง", "width": 148 },
+    { "id": "embed", "lane": "worker", "col": 2, "type": "backend", "label": "DINOv2 Model", "sublabel": "แปลงภาพเป็นเวกเตอร์ 384 มิติ", "tag": "ครอปสัดส่วน 63:88", "width": 148 },
+    { "id": "identify", "lane": "api", "col": 3, "type": "cloud", "label": "/api/identify", "sublabel": "เทียบ Cosine กับ 20,670 ใบ", "width": 148 },
+    { "id": "gate", "lane": "api", "col": 4, "type": "security", "label": "ตรวจความมั่นใจ", "sublabel": "คะแนน Score ≥ 0.82?", "width": 140 },
+    { "id": "ocr", "lane": "fallback", "col": 4, "type": "messagebus", "label": "OCR + JA Lookup", "sublabel": "อ่านเลขการ์ด + ค้น TCGdex", "tag": "อ่านเฉพาะจุดล่างซ้าย", "width": 148 },
+    { "id": "result", "lane": "ui", "col": 5, "type": "frontend", "label": "แสดงผลการ์ด", "sublabel": "ชื่อ, รูปจริง, ราคาตลาด", "width": 140 }
+  ],
+  "edges": [
+    { "id": "e1", "from": "upload", "to": "detect", "label": "ส่งภาพเข้า Worker", "variant": "emphasis" },
+    { "id": "e2", "from": "detect", "to": "embed", "label": "กรอบการ์ดที่พบ" },
+    { "id": "e3", "from": "embed", "to": "identify", "label": "เวกเตอร์ 384d", "variant": "emphasis" },
+    { "id": "e4", "from": "identify", "to": "gate", "label": "อันดับ 1-5" },
+    { "id": "e5", "from": "gate", "to": "result", "label": "มั่นใจสูง (Score ≥ 0.82)", "variant": "emphasis" },
+    { "id": "e6", "from": "gate", "to": "ocr", "label": "คะแนนต่ำ / ลังเล", "variant": "dashed", "role": "branch" },
+    { "id": "e7", "from": "ocr", "to": "result", "label": "ยืนยันจากเลขการ์ด", "variant": "dashed", "role": "return" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "1. รับภาพและหาตำแหน่ง (Local)",
+      "items": [
+        "ภาพถูกปรับขนาดเพื่อประหยัด RAM บนมือถือ",
+        "YOLOv8-OBB หาตำแหน่งการ์ดพร้อมองศาการเอียง",
+        "ตัดภาพเฉพาะตัวการ์ดและหมุนให้ตั้งตรงสัดส่วน 63:88"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "2. ถอดรหัสภาพและค้นหา (AI Matching)",
+      "items": [
+        "DINOv2 แปลงภาพเป็นการ์ดเป็นเวกเตอร์ 384 มิติใน Web Worker",
+        "ส่งเวกเตอร์ไป Cloudflare Worker ค้นหาในฐานข้อมูล 20,670 ใบ",
+        "คำนวณคะแนนความเหมือน (Cosine Similarity) ภายในเสี้ยววินาที"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "3. กรองความแม่นยำและ Fallback",
+      "items": [
+        "ถ้าภาพชัดและคะแนนสูง (≥0.82) ล็อกการ์ดใบที่ถูกต้องทันที",
+        "ถ้าคะแนนไม่มั่นใจหรือมีภาพซ้ำ ใช้ Tesseract OCR อ่านเลขชุดมุมล่าง",
+        "จับคู่เลขชุดกับ TCGdex เพื่อยืนยันใบที่ถูกต้อง 100% แล้วดึงราคาตลาด"
+      ]
+    }
+  ]
+}

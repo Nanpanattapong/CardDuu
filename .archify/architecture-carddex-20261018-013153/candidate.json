@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CardDex Web Architecture",
+    "output": ".archify/architecture-carddex-20261018-013153/carddex.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "browser", "type": "frontend", "label": "Client Browser", "sublabel": "React 18 SPA", "pos": [40, 240], "size": [130, 60] },
+    { "id": "worker-wasm", "type": "frontend", "label": "Web Worker", "sublabel": "ORT WASM / Preload", "pos": [40, 110], "size": [130, 60], "tag": "In-Browser AI" },
+    { "id": "cf-pages", "type": "cloud", "label": "Cloudflare Pages", "sublabel": "Global CDN / Static", "pos": [320, 240], "size": [140, 60] },
+    { "id": "models", "type": "cloud", "label": "ONNX Models", "sublabel": "YOLO + DINOv2", "pos": [320, 110], "size": [140, 60] },
+    { "id": "cf-workers", "type": "backend", "label": "Cloudflare Workers", "sublabel": "Hono API Service", "pos": [580, 240], "size": [150, 60] },
+    { "id": "cf-d1", "type": "database", "label": "Cloudflare D1", "sublabel": "SQLite at the Edge", "pos": [850, 240], "size": [140, 60] },
+    { "id": "external-apis", "type": "external", "label": "Card APIs", "sublabel": "TCGdex / PokemonTCG", "pos": [580, 110], "size": [150, 60] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Client Environment", "wraps": ["browser", "worker-wasm"] },
+    { "kind": "region", "label": "Cloudflare Edge Platform", "wraps": ["cf-pages", "models", "cf-workers", "cf-d1"] }
+  ],
+  "connections": [
+    { "id": "browser-worker", "from": "browser", "to": "worker-wasm", "label": "Offload Inference", "fromSide": "top", "toSide": "bottom" },
+    { "id": "worker-models", "from": "worker-wasm", "to": "models", "label": "Preload / Fetch", "fromSide": "right", "toSide": "left" },
+    { "id": "browser-pages", "from": "browser", "to": "cf-pages", "label": "HTTPS / Static Assets", "fromSide": "right", "toSide": "left" },
+    { "id": "browser-workers", "from": "browser", "to": "cf-workers", "label": "REST API (/api/*)", "fromSide": "bottom", "toSide": "bottom", "via": [[105, 340], [655, 340]] },
+    { "id": "workers-d1", "from": "cf-workers", "to": "cf-d1", "label": "SQL Queries", "fromSide": "right", "toSide": "left" },
+    { "id": "workers-external", "from": "cf-workers", "to": "external-apis", "label": "Fetch Prices/Cards", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Client Tier", "items": ["React 18 Single Page App on Cloudflare Pages", "Web Worker with ONNX Runtime Web for local card detection and embedding"] },
+    { "dot": "emerald", "title": "Edge Services", "items": ["Hono API hosted on Cloudflare Workers", "D1 Serverless SQLite database for auth, listings, and price trends"] },
+    { "dot": "amber", "title": "External Data", "items": ["Price checks and card identification fallback via TCGdex and PokemonTCG APIs"] }
+  ]
+}

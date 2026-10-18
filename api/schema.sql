@@ -122,12 +122,16 @@ INSERT OR IGNORE INTO users (id,name,email,pass_hash,pass_salt,avatar) VALUES
   ('user-1','สมชายเทรนเนอร์','somchai@example.com','7f4cc7ee503106233a9a8f9cd4a978a8bd3023d1e8200b165df3396892796bbb','384acfea2a5ae7d4b415147d22120792','ส');
 
 INSERT OR IGNORE INTO listings (id,seller_id,name,price,era,description,image,created_at) VALUES
-  ('mkt-1','user-1','Charizard ex SIR — Obsidian Flames',18500,'SV3 · SIR · NM','มุมคม ขอบขาวน้อยมาก ผิวโฮโลแกรมสวย แถมสลีฟ+ท็อปโหลดเดอร์','/assets/charizard-ex-sir-sv3-223.png',CAST(strftime('%s','now') AS INTEGER)*1000-60000),
-  ('mkt-2','demo','Pikachu IR — Pokémon 151',4200,'SV3.5 · IR · NM','อาร์ตน่ารัก เก็บสะสม ผิวสะอาด','/assets/pikachu-ir-sv3pt5-173.png',CAST(strftime('%s','now') AS INTEGER)*1000-120000),
-  ('mkt-3','user-1','Mew ex SIR — Paldean Fates',12500,'SV4.5 · SIR · NM','ยอดนิยม สีพาสเทล ลายเต็มใบ สภาพดี','/assets/mew-ex-sir-sv4pt5-232.png',CAST(strftime('%s','now') AS INTEGER)*1000-180000),
-  ('mkt-4','demo','Charizard ex HR (Gold) — Obsidian Flames',3200,'SV3 · HR · EX+','การ์ดทอง มุมมีรอยนิดเดียว ขายราคามิตรภาพ','/assets/charizard-ex-hr-sv3-228.png',CAST(strftime('%s','now') AS INTEGER)*1000-240000),
-  ('mkt-5','user-1','Eevee ex SIR — Prismatic Evolutions',8900,'SV8.5 · SIR · NM','อาร์ตหายาก เก็บในซองตลอด','/assets/eevee-ex-sir-sv8pt5-167.png',CAST(strftime('%s','now') AS INTEGER)*1000-300000),
-  ('mkt-6','demo','Gardevoir ex SIR — Scarlet & Violet',2800,'SV1 · SIR · NM','อาร์ตสวยมาก เหมาะตั้งโชว์','/assets/gardevoir-ex-sir-sv1-245.png',CAST(strftime('%s','now') AS INTEGER)*1000-360000);
+  ('mkt-1','user-1','Charizard ex SIR — Obsidian Flames',18500,'pokemon · SV3 · SIR · NM','มุมคม ขอบขาวน้อยมาก ผิวโฮโลแกรมสวย แถมสลีฟ+ท็อปโหลดเดอร์','/assets/charizard-ex-sir-sv3-223.png',CAST(strftime('%s','now') AS INTEGER)*1000-60000),
+  ('mkt-2','demo','Pikachu IR — Pokémon 151',4200,'pokemon · SV3.5 · IR · NM','อาร์ตน่ารัก เก็บสะสม ผิวสะอาด','/assets/pikachu-ir-sv3pt5-173.png',CAST(strftime('%s','now') AS INTEGER)*1000-120000),
+  ('mkt-3','user-1','Mew ex SIR — Paldean Fates',12500,'pokemon · SV4.5 · SIR · NM','ยอดนิยม สีพาสเทล ลายเต็มใบ สภาพดี','/assets/mew-ex-sir-sv4pt5-232.png',CAST(strftime('%s','now') AS INTEGER)*1000-180000),
+  ('mkt-4','demo','Charizard ex HR (Gold) — Obsidian Flames',3200,'pokemon · SV3 · HR · EX+','การ์ดทอง มุมมีรอยนิดเดียว ขายราคามิตรภาพ','/assets/charizard-ex-hr-sv3-228.png',CAST(strftime('%s','now') AS INTEGER)*1000-240000),
+  ('mkt-5','user-1','Eevee ex SIR — Prismatic Evolutions',8900,'pokemon · SV8.5 · SIR · NM','อาร์ตหายาก เก็บในซองตลอด','/assets/eevee-ex-sir-sv8pt5-167.png',CAST(strftime('%s','now') AS INTEGER)*1000-300000),
+  ('mkt-6','demo','Gardevoir ex SIR — Scarlet & Violet',2800,'pokemon · SV1 · SIR · NM','อาร์ตสวยมาก เหมาะตั้งโชว์','/assets/gardevoir-ex-sir-sv1-245.png',CAST(strftime('%s','now') AS INTEGER)*1000-360000),
+  ('mkt-7','user-1','Shanks (SEC) — Romance Dawn [One Piece]',28500,'onepiece · OP01-120 · SEC · NM','การ์ดแรร์วันพีซ การ์ดมังงะ อาร์ตสวยกริบ เก็บเข้าเคสเกรดตลอด','/onepiece/OP01-120.jpg',CAST(strftime('%s','now') AS INTEGER)*1000-400000),
+  ('mkt-8','demo','Blue-Eyes White Dragon — 2016 Mega-Tins [Yu-Gi-Oh!]',1500,'yugioh · CT13-EN008 · Ultra Rare · PSA 9','ยูกิตำนาน มังกรขาวตาฟ้า Ultra Rare สภาพ PSA 9 สวยงาม','/ygo/89631139.jpg',CAST(strftime('%s','now') AS INTEGER)*1000-450000),
+  ('mkt-9','user-1','Monkey.D.Luffy (SR) — Romance Dawn [One Piece]',3900,'onepiece · OP01-024 · SR · NM','ลูฟี่การ์ด SR วันพีซชุดแรก สภาพกริบใส่ซองใสตลอดเวลามีท็อปโหลดเดอร์','/onepiece/OP01-024.jpg',CAST(strftime('%s','now') AS INTEGER)*1000-500000),
+  ('mkt-10','demo','Dark Magician — 2016 Mega-Tins [Yu-Gi-Oh!]',1200,'yugioh · CT13-EN003 · Ultra Rare · EX+','แบล็คเมจิเชียน สภาพดีมีรอยนิดหน่อย การ์ดสะสมคลาสสิก','/ygo/36996508.jpg',CAST(strftime('%s','now') AS INTEGER)*1000-550000);
 
 INSERT OR IGNORE INTO posts (id,author_id,text,image,created_at) VALUES
   ('post-1','user-1','เพิ่งเปิด Obsidian Flames ได้ Charizard SIR ใบนี้ มุมคมกริบเลยครับ ควรส่งเกรด PSA ไหม?','/assets/charizard-ex-sir-sv3-223.png',CAST(strftime('%s','now') AS INTEGER)*1000-7200000),

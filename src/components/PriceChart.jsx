@@ -4,18 +4,19 @@ import { baht } from '../lib.js';
 export default function PriceChart({ data }) {
   const history = data?.history || (Array.isArray(data) ? data : []);
   const live = data?.live;
+  const isPokemon = !live?.source || live.source === 'Pokémon TCG API';
 
   return (
     <div style={{ margin: '14px 0' }}>
       {live && (live.marketThb || live.cardmarketThb) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
           <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 10px' }}>
-            <div style={{ font: '500 10px var(--mono)', color: 'var(--muted)' }}>TCGPLAYER MARKET</div>
+            <div style={{ font: '500 10px var(--mono)', color: 'var(--muted)' }}>{isPokemon ? 'TCGPLAYER MARKET' : 'MARKET PRICE'}</div>
             <div style={{ font: '600 15px var(--mono)', color: 'var(--accent-deep)' }}>{live.marketThb ? <>฿{baht(live.marketThb)} {live.marketUsd && <span style={{ fontSize: 11, color: 'var(--muted)' }}>(${live.marketUsd})</span>}</> : '—'}</div>
           </div>
           <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 6, padding: '8px 10px' }}>
             <div style={{ font: '500 10px var(--mono)', color: 'var(--muted)' }}>CARDMARKET AVG</div>
-            <div style={{ font: '600 15px var(--mono)', color: 'var(--fg)' }}>{live.cardmarketThb ? `฿${baht(live.cardmarketThb)}` : '—'}</div>
+            <div style={{ font: '600 15px var(--mono)', color: 'var(--fg)' }}>{live.cardmarketThb ? `฿${baht(live.cardmarketThb)}` : (live?.source === 'OPTCG API' ? 'N/A (OPTCG ไม่มี Cardmarket)' : '—')}</div>
           </div>
         </div>
       )}
@@ -87,7 +88,7 @@ export default function PriceChart({ data }) {
         );
       })()}
       <div style={{ fontSize: 10, color: 'var(--muted)', textAlign: 'right', marginTop: 4 }}>
-        ข้อมูลอ้างอิงจาก {live?.tcgplayerUrl ? <a href={live.tcgplayerUrl} target="_blank" rel="noreferrer">TCGplayer</a> : 'TCGplayer'} / {live?.cardmarketUrl ? <a href={live.cardmarketUrl} target="_blank" rel="noreferrer">Cardmarket</a> : 'Cardmarket'} ผ่าน Pokémon TCG API{live?.updatedAt ? ` · อัปเดต ${live.updatedAt}` : ''}
+        ข้อมูลอ้างอิงจาก {live?.tcgplayerUrl ? <a href={live.tcgplayerUrl} target="_blank" rel="noreferrer">TCGplayer</a> : 'TCGplayer'} / {live?.cardmarketUrl ? <a href={live.cardmarketUrl} target="_blank" rel="noreferrer">Cardmarket</a> : 'Cardmarket'} {live?.source ? <>ผ่าน <a href={live.sourceUrl} target="_blank" rel="noreferrer">{live.source}</a></> : 'ผ่าน Pokémon TCG API'}{live?.updatedAt ? ` · อัปเดต ${live.updatedAt}` : ''}
       </div>
     </div>
   );
